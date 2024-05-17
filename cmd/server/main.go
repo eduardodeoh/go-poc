@@ -1,7 +1,21 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+
+	"github.com/eduardodeoh/go-proc/internal/core/config"
+)
 
 func main() {
-	fmt.Println("Hello, world.")
+	// Initialize Config
+	appConfig, err := config.New()
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to initialize App Config: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println(appConfig)
+
 }
