@@ -65,4 +65,17 @@ db-migration:
 	migrate create -ext sql -dir ${db_migrations_dir} $(name)
 	
 
+#========================#
+#== DATABASE SEED DATA ==#
+#========================#
+db-seed-file: ## Creates a new seed file with using the provided name. e.g `make db-seed-file name=put_your_seed_file_name_here`
+db-seed-file:
+	@echo "Creating seed data file"
+	@echo "--Seed files MUST be idempotent by design" > $(db_seeds_dir)/$$(date +%Y%m%d%H%M%S)_$(seed_name).sql
 
+
+sql_files = $(wildcard $(db_seeds_dir)/*.sql)
+
+db-seed: ## Seeds database
+db-seed:
+	@$(foreach file,$(sql_files), echo -e "\n Seeding $(file)"; psql -f $(file) $(db_url);)
