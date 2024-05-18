@@ -2,11 +2,10 @@ package config
 
 import (
 	"fmt"
-
 	"github.com/ardanlabs/conf/v3"
 )
 
-type config struct {
+type Config struct {
 	App struct {
 		Name string `conf:"env:APP_NAME,default:go-poc-example"`
 	}
@@ -18,7 +17,12 @@ type config struct {
 		User     string `conf:"env:DB_USER,default:postgres"`
 		Password string `conf:"env:DB_PASSWORD,default:postgres"`
 		SSLMode  string `conf:"env:DB_SSLMODE,default:disable"`
-		// https://pkg.go.dev/github.com/jackc/pgx/v5@v5.3.0/pgxpool#ParseConfig
+		// Valid log levels: https://pkg.go.dev/github.com/jackc/pgx/v5@v5.5.5/tracelog#LogLevelFromString
+		LogLevel string `conf:"env:DB_LOG_LEVEL,default:info"`
+		/*
+			https://pkg.go.dev/github.com/jackc/pgx#ConnConfig
+			https://pkg.go.dev/github.com/jackc/pgx/v5@v5.5.5/pgxpool#Config
+		*/
 		Pool struct {
 			MaxConn               int    `conf:"env:DB_POOL_MAX_CONN,default:5"`
 			MinConn               int    `conf:"env:DB_POOL_MIN_CONN,default:0"`
@@ -30,24 +34,28 @@ type config struct {
 	}
 }
 
-func New() (*config, error) {
-	var c config = config{}
+func NewConfig() (*Config, error) {
+	var c Config = Config{}
 	if _, err := conf.Parse("", &c); err != nil {
-		return &config{}, err
+		return &Config{}, fmt.Errorf("fail to parse config: %w", err)
 	}
 
 	return &c, nil
 }
 
-func (c *config) AppName() string {
+func (c *Config) AppName() string {
 	return c.App.Name
 }
 
-func (c *config) DbDsn() string {
-	// https://pkg.go.dev/github.com/jackc/pgx/v5@v5.5.5/pgxpool#ParseConfig
-	base_dsn := "host=%s port=%d user=%s password=%s dbname=%s sslmode=%s"
-	pool_dsn := "pool_max_conns=%d pool_min_conns=%d pool_max_conn_lifetime=%s pool_max_conn_idle_time=%s pool_health_check_period=%s pool_max_conn_lifetime_jitter=%s"
-	dsn := base_dsn + " " + pool_dsn
+func (c *Config) DbDsn() string {
+	/*
+		https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
+		https://pkg.go.dev/github.com/jackc/pgx/v5@v5.5.5/pgxpool#ParseConfig
+	*/
+
+	baseDsn := "host=%s port=%d user=%s password=%s dbname=%s sslmode=%s"
+	poolDsn := "pool_max_conns=%d pool_min_conns=%d pool_max_conn_lifetime=%s pool_max_conn_idle_time=%s pool_health_check_period=%s pool_max_conn_lifetime_jitter=%s"
+	dsn := baseDsn + " " + poolDsn
 
 	return fmt.Sprintf(dsn, c.Db.Host, c.Db.Port, c.Db.User, c.Db.Password, c.Db.Name, c.Db.SSLMode, c.Db.Pool.MaxConn, c.Db.Pool.MinConn, c.Db.Pool.MaxConnLifetime, c.Db.Pool.MaxConnIdleTime, c.Db.Pool.HealthCheckPeriod, c.Db.Pool.MaxConnLifetimeJitter)
 }
