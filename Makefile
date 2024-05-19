@@ -79,3 +79,12 @@ sql_files = $(wildcard $(db_seeds_dir)/*.sql)
 db-seed: ## Seeds database
 db-seed:
 	@$(foreach file,$(sql_files), echo -e "\n Seeding $(file)"; psql -f $(file) $(db_url);)
+
+
+#==================#
+#== CODE QUALITY ==#
+#==================#
+code-quality: ## Run Go linters to check code quality
+code-quality:
+	@echo "Checking code quality..."
+	golangci-lint run ./...

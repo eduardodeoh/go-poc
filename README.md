@@ -19,3 +19,22 @@ Golang PoC
     
 ### Seed data
     make db-seed
+
+# Go Linters
+### [golangci-lint](https://golangci-lint.run/)
+    go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.58.1
+    golangci-lint run ./...
+
+### [staticcheck](https://staticcheck.dev/)
+    go install honnef.co/go/tools/cmd/staticcheck@latest
+    staticcheck ./...
+
+### [go-critic](https://go-critic.com/)
+    go install -v github.com/go-critic/go-critic/cmd/gocritic@latest
+    gocritic check ./...
+
+### Govet
+    go vet ./...
+
+### Gofmt
+    go fmt ./...
