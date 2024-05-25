@@ -23,19 +23,10 @@ func main() {
 	}
 	logger.Info("Database config loaded!")
 
-	databaseLogger := database.NewLogger(logger)
-	databaseLogLevel, err := database.LogLevelFromString(dbConfig.Db.LogLevel)
-	if err != nil {
-		logger.Error("error parsing database log level", "details", err)
-		os.Exit(1)
-	}
-
-	logger.Info("Database log level", "value", dbConfig.Db.LogLevel)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	db, err := database.NewPool(ctx, dbConfig.Dsn(), databaseLogger, databaseLogLevel)
+	db, err := database.NewPoolWithLogger(ctx, dbConfig.Dsn(), logger, dbConfig.LogLevel())
 
 	if err != nil {
 		logger.Error("Database failed", "details", err)

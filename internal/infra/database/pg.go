@@ -3,9 +3,10 @@ package database
 import (
 	"context"
 	"fmt"
+	"log/slog"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/tracelog"
-	"log/slog"
 )
 
 // https://pkg.go.dev/github.com/jackc/pgx/v5@v5.5.5#readme-adapters-for-3rd-party-loggers
@@ -13,7 +14,7 @@ type Logger struct {
 	l *slog.Logger
 }
 
-func NewPool(ctx context.Context, connString string, logger tracelog.Logger, logLevel tracelog.LogLevel) (*pgxpool.Pool, error) {
+func NewPool(ctx context.Context, connString string) (*pgxpool.Pool, error) {
 
 	// Parsing database connection string
 	config, err := pgxpool.ParseConfig(connString)
@@ -22,10 +23,38 @@ func NewPool(ctx context.Context, connString string, logger tracelog.Logger, log
 		return nil, fmt.Errorf("unable to parse pool config: %w", err)
 	}
 
+	// Database Connection Pool
+	// https://github.com/jackc/pgx/wiki/Getting-started-with-pgx#using-a-connection-pool
+	pool, err := pgxpool.NewWithConfig(ctx, config)
+
+	if err != nil {
+		return nil, fmt.Errorf("unable to create connection pool: %w", err)
+	}
+
+	if err := pool.Ping(ctx); err != nil {
+		return nil, fmt.Errorf("unable to ping database: %w", err)
+	}
+
+	return pool, nil
+}
+
+func NewPoolWithLogger(ctx context.Context, connString string, logger *slog.Logger, logLevel string) (*pgxpool.Pool, error) {
+	// Parsing database connection string
+	config, err := pgxpool.ParseConfig(connString)
+
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse pool config: %w", err)
+	}
+
+	level, err := tracelog.LogLevelFromString(logLevel)
+	if err != nil {
+		return nil, fmt.Errorf("invalid database log level: %w", err)
+	}
+
 	// Update pool config
 	config.ConnConfig.Tracer = &tracelog.TraceLog{
-		Logger:   logger,
-		LogLevel: logLevel,
+		Logger:   &Logger{l: logger},
+		LogLevel: level,
 	}
 
 	// Database Connection Pool
@@ -49,10 +78,6 @@ func LogLevelFromString(level string) (tracelog.LogLevel, error) {
 		return tracelog.LogLevelDebug, fmt.Errorf("database log level configuration: %w", err)
 	}
 	return l, nil
-}
-
-func NewLogger(l *slog.Logger) *Logger {
-	return &Logger{l: l}
 }
 
 // https://github.com/mcosta74/pgx-slog/blob/main/adapter.go

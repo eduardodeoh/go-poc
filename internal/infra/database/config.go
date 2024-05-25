@@ -57,5 +57,8 @@ func (c *Config) DsnWithPoolOptions() string {
 	pool_dsn := fmt.Sprintf(pool, c.Pool.MaxConn, c.Pool.MinConn, c.Pool.MaxConnLifetime, c.Pool.MaxConnIdleTime, c.Pool.HealthCheckPeriod, c.Pool.MaxConnLifetimeJitter)
 
 	return base_dsn + " " + pool_dsn
+}
 
+func (c *Config) LogLevel() string {
+	return c.Db.LogLevel
 }
