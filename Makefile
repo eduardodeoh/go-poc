@@ -88,3 +88,25 @@ code-quality: ## Run Go linters to check code quality
 code-quality:
 	@echo "Checking code quality..."
 	golangci-lint run ./...
+
+
+#==================#
+#== CODE TESTING ==#
+#==================#
+test-code: ## Run Go tests
+test-code:
+	@echo "Testing code..."
+	go test -v ./...
+
+test-cover: ## Calculate test coverage
+test-cover:
+	@echo "Generating code coverage..."
+	go test -coverprofile=coverage.out -v ./...
+
+test-cover-report-html: ## Show generated test coverage
+test-cover-report-html:
+	go tool cover -html=coverage.out
+
+test-cover-report-cli: ## Show generated test coverage
+test-cover-report-cli:
+	go tool cover -func=coverage.out

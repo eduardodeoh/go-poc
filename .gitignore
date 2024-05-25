@@ -22,3 +22,6 @@ go.work
 
 # Golang
 .idea/
+
+# Code coverage
+coverage.out

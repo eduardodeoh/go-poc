@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/eduardodeoh/go-poc/internal/core/config"
 	"github.com/eduardodeoh/go-poc/internal/infra/database"
 )
 
@@ -16,29 +15,27 @@ func main() {
 	// Initialize Logger
 	logger := initializeLogger(appEnv)
 
-	// Initialize Config
-	appConfig, err := config.NewConfig()
-
+	// Initialize Database Pool
+	dbConfig, err := database.NewConfig()
 	if err != nil {
 		logger.Error("error loading config", "details", err)
 		os.Exit(1)
 	}
-	logger.Info("App Config loaded!")
+	logger.Info("Database config loaded!")
 
-	// Initialize Database Pool
 	databaseLogger := database.NewLogger(logger)
-	databaseLogLevel, err := database.LogLevelFromString(appConfig.Db.LogLevel)
+	databaseLogLevel, err := database.LogLevelFromString(dbConfig.Db.LogLevel)
 	if err != nil {
 		logger.Error("error parsing database log level", "details", err)
 		os.Exit(1)
 	}
 
-	logger.Info("Database log level", "value", appConfig.Db.LogLevel)
+	logger.Info("Database log level", "value", dbConfig.Db.LogLevel)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	db, err := database.NewPool(ctx, appConfig.DbDsn(), databaseLogger, databaseLogLevel)
+	db, err := database.NewPool(ctx, dbConfig.Dsn(), databaseLogger, databaseLogLevel)
 
 	if err != nil {
 		logger.Error("Database failed", "details", err)
